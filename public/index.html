@@ -14,11 +14,11 @@
     <!-- Font Awesome -->
     <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
 
-    <script src="despesa.js"></script>
+    <script src="script.js"></script>
 
 </head>
 
-<body onload="carregaListaDespesas(), carregarTipos()">
+<body onload="pegaNomeUsuario(), carregaListaDespesas(), carregarTipos()">
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-5">
         <div class="container">
@@ -45,7 +45,7 @@
                   <img src="https://github.com/mdo.png" alt="mdo" width="32" height="32" class="rounded-circle">
                 </a>
                 <ul class="dropdown-menu text-small shadow">
-                  <li><a class="dropdown-item" href="#">Nome do usuário logado aqui</a></li>
+                  <li><a id="usuarioLogado" class="dropdown-item" href="#">Nome do usuário logado aqui</a></li>
                   <li><a class="dropdown-item" href="/logout">Sair</a></li>
                 </ul>
               </div>

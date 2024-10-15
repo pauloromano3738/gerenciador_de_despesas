@@ -1,3 +1,15 @@
+function pegaNomeUsuario() {
+  fetch('/usuario')
+    .then(response => response.json())
+    .then(data => {
+      if (data.nome) {
+        document.getElementById('usuarioLogado').innerText = data.nome;
+      }
+    })
+    .catch(error => console.error('Erro ao buscar nome do usuário:', error));
+}
+
+
 function cadastrarDespesa() {
     const data = document.getElementById('data').value;
     const tipo = document.getElementById('tipo').value;

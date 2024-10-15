@@ -10,7 +10,7 @@ const port = 3000;
 const database = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: 'he182555@', // Use sua senha correta aqui
+  password: 'Paulo202930!', // Use sua senha correta aqui
   database: 'gerenciador_de_despesas'
 });
 
@@ -114,6 +114,16 @@ app.post('/verificarLogin', (req, res) => {
 // Rota para a página principal (index.html) protegida por autenticação
 app.get('/index.html', verificaAutenticacao, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+
+//recupera o nome do usuário
+app.get('/usuario', (req, res) => {
+  if (req.session.userId) {
+    res.json({ nome: req.session.userName });
+  } else {
+    res.status(401).json({ message: 'Usuário não logado' });
+  }
 });
 
 // Rota para cadastrar uma nova despesa (protegida por autenticação)
