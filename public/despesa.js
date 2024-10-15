@@ -7,7 +7,7 @@ function cadastrarDespesa() {
     const despesa = { data, tipo, descricao, valor };
   
     // Enviando via AJAX para o servidor
-    fetch('/cadastrar-despesa', {
+    fetch('/cadastrarDespesa', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -29,4 +29,6 @@ function cadastrarDespesa() {
       })
       .catch((error) => console.error('Erro:', error));
   }
+
+  
   

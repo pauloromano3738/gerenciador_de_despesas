@@ -8,6 +8,11 @@
 </head>
 <body class="d-flex align-items-center py-4 bg-body-tertiary">
     <main class="form-signin w-100 mx-auto">
+
+        <div id="alertaSucesso" class="alert alert-success" role="alert" style="display: none;">
+            Usuário cadastrado com sucesso!
+        </div>
+
         <form action="/cadastrar" method="post">
             <h1 class="h3 mb-3 fw-normal text-center">Cadastro</h1>
 
@@ -29,5 +34,6 @@
             <button class="btn btn-primary w-100 py-2 text-uppercase mt-2" type="submit">Cadastrar</button>
         </form>
     </main>
+    <script src="cadastro.js"></script>
 </body>
 </html>
