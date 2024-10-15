@@ -1,271 +1,137 @@
-class Despesa {
-	constructor(data, tipo, descricao, valor) {
-		this.data = data; // Armazena a data como um objeto Date
-		this.tipo = tipo;
-		this.descricao = descricao;
-		this.valor = valor;
-	}
+const express = require('express');
+const bodyParser = require('body-parser');
+const mysql = require('mysql');
+const path = require('path');
+const session = require('express-session'); // Importando o express-session
 
-	validarDados() {
-		for (let i in this) {
-			if (this[i] == undefined || this[i] == '' || this[i] == null) {
-				return false;
-			}
-		}
-		return true;
-	}
-}
+const app = express();
+const port = 3000;
 
-class Bd {
-	constructor() {
-		let id = localStorage.getItem('id');
+// Configurando a conexão com o banco de dados
+const database = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: 'Paulo202930!',
+  database: 'gerenciador_de_despesas'
+});
 
-		if (id === null) {
-			localStorage.setItem('id', 0);
-		}
-	}
+database.connect((error) => {
+  if (error) {
+    console.error('Erro ao conectar ao MySQL:', error);
+    return;
+  }
+  console.log('Conectado ao MySQL!');
+});
 
-	getProximoId() {
-		let proximoId = localStorage.getItem('id');
-		return parseInt(proximoId) + 1;
-	}
+// Middleware para processar dados JSON e URL-encoded
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-	gravar(d) {
-		let id = this.getProximoId();
-		localStorage.setItem(id, JSON.stringify(d));
-		localStorage.setItem('id', id);
-	}
+// Configuração da sessão
+app.use(session({
+  secret: 'seu-segredo-aqui', // Chave secreta para a sessão
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false } // Mudar para 'true' se estiver usando HTTPS
+}));
 
-	recuperarTodosRegistros() {
-    let despesas = [];
-    let id = localStorage.getItem('id');
+// Servindo arquivos estáticos
+app.use(express.static(path.join(__dirname, 'public')));
 
-    for (let i = 1; i <= id; i++) {
-        let despesa = JSON.parse(localStorage.getItem(i));
-        if (despesa === null) {
-            continue;
-        }
-        despesa.id = i;
-        despesas.push(despesa);
+// Redirecionando para a página de login quando acessar '/'
+app.get('/', (req, res) => {
+  res.redirect('/login');
+});
+
+// Rota para a página de login
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// Rota para a página de cadastro
+app.get('/cadastro', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'cadastro.html'));
+});
+
+// Rota para cadastrar um novo usuário
+app.post('/cadastrar', (req, res) => {
+  const { nome, email, senha } = req.body;
+
+  // Verificar se o usuário já existe
+  database.query('SELECT * FROM usuarios WHERE email = ?', [email], (error, results) => {
+    if (results.length > 0) {
+      return res.status(400).json({ message: 'Usuário já cadastrado com este email' });
     }
 
-    // Inverte a ordem para que as despesas mais recentes apareçam primeiro
-    return despesas.reverse();
-}
-
-	pesquisar(despesa) {
-		let despesasFiltradas = this.recuperarTodosRegistros();
-		console.log(despesasFiltradas);
-		console.log(despesa);
-
-		// Aplicando filtros
-		if (despesa.data) {
-			let ano = despesa.data.split('-')[0];
-			let mes = despesa.data.split('-')[1];
-			despesasFiltradas = despesasFiltradas.filter(d => d.data.startsWith(`${ano}-${mes}`));
-		}
-		if (despesa.tipo != '') {
-			despesasFiltradas = despesasFiltradas.filter(d => d.tipo == despesa.tipo);
-		}
-		if (despesa.descricao != '') {
-			despesasFiltradas = despesasFiltradas.filter(d => d.descricao == despesa.descricao);
-		}
-		if (despesa.valor != '') {
-			despesasFiltradas = despesasFiltradas.filter(d => d.valor == despesa.valor);
-		}
-
-		return despesasFiltradas;
-	}
-
-	remover(id) {
-		localStorage.removeItem(id);
-	}
-}
-
-let bd = new Bd();
-
-function cadastrarDespesa() {
-	let data = document.getElementById('data').value; // Novo input de data
-	let tipo = document.getElementById('tipo');
-	let descricao = document.getElementById('descricao');
-	let valor = document.getElementById('valor');
-
-	let despesa = new Despesa(data, tipo.value, descricao.value, valor.value);
-
-	if (despesa.validarDados()) {
-		bd.gravar(despesa);
-
-		document.getElementById('modal_titulo').innerHTML = 'Registro inserido com sucesso';
-		document.getElementById('modal_titulo_div').className = 'modal-header text-success';
-		document.getElementById('modal_conteudo').innerHTML = 'Despesa foi cadastrada com sucesso!';
-		document.getElementById('modal_btn').innerHTML = 'Voltar';
-		document.getElementById('modal_btn').className = 'btn btn-success';
-
-		const alertaSucesso = document.getElementById('alertaSucesso');
-    alertaSucesso.style.display = 'block'; // Mostra o alerta
-
-    // Esconde o alerta após 1 segundo
-    setTimeout(() => {
-      location.reload(); // Recarrega a página
-      alertaSucesso.style.display = 'none';
-    }, 1000);
-
-	} else {
-		document.getElementById('modal_titulo').innerHTML = 'Erro na inclusão do registro';
-		document.getElementById('modal_titulo_div').className = 'modal-header text-danger';
-		document.getElementById('modal_conteudo').innerHTML = 'Erro na gravação, verifique se todos os campos foram preenchidos corretamente!';
-		document.getElementById('modal_btn').innerHTML = 'Voltar e corrigir';
-		document.getElementById('modal_btn').className = 'btn btn-danger';
-
-		$('#modalRegistraDespesa').modal('show');
-	}
-}
-
-function carregaListaDespesas(despesas = Array(), filtro = false) {
-    if (despesas.length == 0 && filtro == false) {
-        despesas = bd.recuperarTodosRegistros();
-    }
-
-    let listaDespesas = document.getElementById("listaDespesas");
-    listaDespesas.innerHTML = '';
-    despesas.forEach(function(d) {
-        var linha = listaDespesas.insertRow();
-        
-        // Formatar a data corretamente
-        let data = new Date(d.data);
-        let dataFormatada = data.toLocaleDateString('pt-BR', {
-            timeZone: 'UTC', // Define o fuso horário como UTC
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-        });
-
-        linha.insertCell(0).innerHTML = dataFormatada;
-
-        switch (d.tipo) {
-            case '1': d.tipo = 'Alimentação'; break;
-            case '2': d.tipo = 'Educação'; break;
-            case '3': d.tipo = 'Lazer'; break;
-            case '4': d.tipo = 'Saúde'; break;
-            case '5': d.tipo = 'Transporte'; break;
-        }
-        linha.insertCell(1).innerHTML = d.tipo;
-        linha.insertCell(2).innerHTML = d.descricao;
-        linha.insertCell(3).innerHTML = d.valor;
-
-        let btn = document.createElement('button');
-        btn.className = 'btn btn-danger';
-        btn.innerHTML = '<i class="fa fa-times"></i>';
-        btn.id = `id_despesa_${d.id}`;
-        btn.onclick = function() {
-            let id = this.id.replace('id_despesa_', '');
-            bd.remover(id);
-            window.location.reload();
-        }
-        linha.insertCell(4).append(btn);
+    // Inserir o usuário no banco de dados
+    const sql = 'INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)';
+    database.query(sql, [nome, email, senha], (error, result) => {
+      if (error) {
+        return res.status(500).json({ error: 'Erro ao cadastrar usuário' });
+      }
+      res.redirect('/login'); // Redirecionar para o login após o cadastro
     });
-}
+  });
+});
 
+// Rota para verificar o login
+app.post('/verifyLogin', (req, res) => {
+  const { login, senha } = req.body;
 
-function pesquisarDespesa() {
-	let dataInicio = document.getElementById("dataInicio").value;
-	let dataFim = document.getElementById("dataFim").value;
-	let tipo = document.getElementById("tipo").value;
+  // Verificar se o usuário existe
+  const sql = 'SELECT * FROM usuarios WHERE email = ? AND senha = ?';
+  database.query(sql, [login, senha], (error, results) => {
+    if (results.length === 0) {
+      return res.status(400).json({ message: 'Usuário ou senha incorretos' });
+    }
 
-	let despesas = bd.recuperarTodosRegistros();
+    // Salvando o ID do usuário na sessão
+    req.session.userId = results[0].id;
+    req.session.userName = results[0].nome;
 
-	// Filtragem por intervalo de datas
-	if (dataInicio) {
-			despesas = despesas.filter(d => new Date(d.data) >= new Date(dataInicio));
-	}
-	if (dataFim) {
-			despesas = despesas.filter(d => new Date(d.data) <= new Date(dataFim));
-	}
-	if (tipo) {
-			despesas = despesas.filter(d => d.tipo == tipo);
-	}
+    // Redirecionar para o index.html após o login
+    res.redirect('/index.html');
+  });
+});
 
-	carregaListaDespesas(despesas, true);
-}
+// Rota para proteger a página index.html
+app.get('/index.html', (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect('/login');
+  }
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
+// Rota para cadastrar uma nova despesa
+app.post('/cadastrar-despesa', (req, res) => {
+  const { data, tipo, descricao, valor } = req.body;
 
-function adicionarTipo() {
-	let novoTipo = document.getElementById('novoTipo').value;
+  // Verificar se o usuário está logado
+  if (!req.session.userId) {
+    return res.status(401).json({ message: 'Usuário não autenticado' });
+  }
 
-	if (novoTipo) {
-			// Cria uma nova opção
-			let option = document.createElement('option');
-			option.value = novoTipo;
-			option.text = novoTipo;
+  // Inserir a despesa no banco de dados
+  const sql = 'INSERT INTO despesas (data, tipo, descricao, valor, usuarios_id) VALUES (?, ?, ?, ?, ?)';
+  database.query(sql, [data, tipo, descricao, valor, req.session.userId], (error, result) => {
+    if (error) {
+      return res.status(500).json({ error: 'Erro ao cadastrar despesa' });
+    }
+    res.status(200).json({ message: 'Despesa cadastrada com sucesso' });
+  });
+});
 
-			// Adiciona a nova opção ao select
-			document.getElementById('tipo').add(option);
+// Rota para logout
+app.get('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Erro ao sair' });
+    }
+    res.redirect('/login');
+  });
+});
 
-			// Adiciona o novo tipo ao localStorage
-			salvarTipo(novoTipo);
-
-			// Limpa o campo de entrada no modal
-			document.getElementById('novoTipo').value = '';
-
-			// Fecha o modal
-			$('#modalNovoTipo').modal('hide');
-	} else {
-			alert('Por favor, insira um tipo válido.');
-	}
-}
-
-function salvarTipo(tipo) {
-	let tipos = JSON.parse(localStorage.getItem('tiposDespesa')) || [];
-	tipos.push(tipo);
-	localStorage.setItem('tiposDespesa', JSON.stringify(tipos));
-}
-
-function carregarTipos() {
-	let tipos = JSON.parse(localStorage.getItem('tiposDespesa')) || [];
-
-	tipos.forEach(function(tipo) {
-			let option = document.createElement('option');
-			option.value = tipo;
-			option.text = tipo;
-			document.getElementById('tipo').add(option);
-	});
-}
-
-function imprimirTabela() {
-	// Obtém o conteúdo da tabela
-	const tabela = document.getElementById('tabelaDespesas');
-
-	// Verifica se a tabela foi encontrada
-	if (!tabela) {
-			console.error('Tabela não encontrada!');
-			return; // Sai da função se a tabela não for encontrada
-	}
-
-	// Clona a tabela
-	const tabelaClone = tabela.cloneNode(true);
-
-	// Remove os botões da tabela clonada
-	const botoes = tabelaClone.querySelectorAll('button');
-	botoes.forEach(botao => botao.parentNode.removeChild(botao));
-
-	const tabelaHtml = tabelaClone.outerHTML;
-
-	// Cria uma nova janela
-	const novaJanela = window.open('', '', 'width=800,height=600');
-
-	// Adiciona o conteúdo da tabela à nova janela
-	novaJanela.document.write('<html><head><title>Imprimir Despesas</title>');
-	novaJanela.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">'); // Link para o CSS do Bootstrap
-	novaJanela.document.write('</head><body>');
-	novaJanela.document.write('<h1>Lista de Despesas</h1>');
-	novaJanela.document.write(tabelaHtml);
-	novaJanela.document.write('</body></html>');
-
-	// Fecha o documento para renderizar
-	novaJanela.document.close();
-
-	// Abre a caixa de diálogo de impressão
-	novaJanela.print();
-}
-
-
+// Iniciando o servidor
+app.listen(port, () => {
+  console.log(`Servidor rodando na porta ${port}`);
+});
