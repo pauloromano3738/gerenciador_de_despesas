@@ -84,7 +84,6 @@ app.post('/cadastrar', (req, res) => {
   });
 });
 
-
 // Rota para verificar o login do usuário
 app.post('/verificarLogin', (req, res) => {
   const { login, senha } = req.body;
@@ -116,7 +115,6 @@ app.get('/index.html', verificaAutenticacao, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-
 //recupera o nome do usuário
 app.get('/usuario', (req, res) => {
   if (req.session.userId) {
@@ -124,6 +122,32 @@ app.get('/usuario', (req, res) => {
   } else {
     res.status(401).json({ message: 'Usuário não logado' });
   }
+});
+
+app.post('/adicionarTipo', (req, res) => {
+  const { titulo } = req.body;
+  const usuarios_id = req.session.userId;  // ID do usuário logado armazenado na sessão
+
+  const query = 'INSERT INTO tipos (titulo, usuarios_id) VALUES (?, ?)';
+  database.query(query, [titulo, usuarios_id], (err, result) => {
+      if (err) {
+          console.error(err);
+          return res.status(500).send('Erro ao adicionar tipo');
+      }
+      res.sendStatus(200);  // Sucesso
+  });
+});
+
+app.get('/tipos', (req, res) => {
+  const usuarios_id = req.session.userId;  // ID do usuário logado
+  const query = 'SELECT * FROM tipos WHERE usuarios_id IS NULL OR usuarios_id = ?';
+
+  database.query(query, [usuarios_id], (err, results) => {
+      if (err) {
+          return res.status(500).send('Erro ao carregar tipos');
+      }
+      res.json(results);  // Retornar os tipos como JSON para o front-end
+  });
 });
 
 // Rota para cadastrar uma nova despesa (protegida por autenticação)
