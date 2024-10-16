@@ -203,23 +203,39 @@ app.get('/despesas', (req, res) => {
   const usuarios_id = req.session.userId; // Pega o ID do usuário logado da sessão
 
   if (!usuarios_id) {
-    return res.status(401).send('Usuário não autenticado');
+      return res.status(401).send('Usuário não autenticado');
   }
 
-  // SQL com JOIN para pegar os dados da tabela despesas e os títulos da tabela tipos_despesas
-  const query = `
-    SELECT despesas.*, tipos_despesas.titulo AS tipo
-    FROM despesas
-    JOIN tipos_despesas ON despesas.tipo = tipos_despesas.id
-    WHERE despesas.usuarios_id = ?
-    ORDER BY despesas.data DESC
+  // Inicializa a consulta SQL
+  let query = `
+      SELECT despesas.*, tipos_despesas.titulo AS tipo
+      FROM despesas
+      JOIN tipos_despesas ON despesas.tipo = tipos_despesas.id
+      WHERE despesas.usuarios_id = ?
   `;
+  const queryParams = [usuarios_id];
 
-  database.query(query, [usuarios_id], (err, results) => {
-    if (err) {
-      return res.status(500).send('Erro ao buscar despesas');
-    }
-    res.json(results); // Retorna as despesas para o front-end
+  // Filtragem por data
+  if (req.query.dataInicio) {
+      query += ' AND despesas.data >= ?';
+      queryParams.push(req.query.dataInicio);
+  }
+  if (req.query.dataFim) {
+      query += ' AND despesas.data <= ?';
+      queryParams.push(req.query.dataFim);
+  }
+  if (req.query.tipo) {
+      query += ' AND despesas.tipo = ?';
+      queryParams.push(req.query.tipo);
+  }
+
+  query += ' ORDER BY despesas.data DESC'; // Ordena por data em ordem decrescente
+
+  database.query(query, queryParams, (err, results) => {
+      if (err) {
+          return res.status(500).send('Erro ao buscar despesas');
+      }
+      res.json(results); // Retorna as despesas filtradas para o front-end
   });
 });
 
