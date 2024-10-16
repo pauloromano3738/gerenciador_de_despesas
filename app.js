@@ -10,7 +10,7 @@ const port = 3000;
 const database = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: 'Paulo202930!', // Use sua senha correta aqui
+  password: 'he182555@', // Use sua senha correta aqui
   database: 'gerenciador_de_despesas'
 });
 
@@ -72,17 +72,42 @@ app.get('/', (req, res) => {
 // Rota para registrar um novo usuário
 app.post('/cadastrar', (req, res) => {
   const { nome, email, senha } = req.body;
-
-  const query = 'INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)';
-  database.query(query, [nome, email, senha], (error, result) => {
-    if (error) {
-      console.error('Erro ao cadastrar o usuário:', error);
-      res.status(500).json({ message: 'Erro ao cadastrar usuário.' });
-    } else {
-      res.json({ message: 'Usuário cadastrado com sucesso!' });
-    }
+  
+  // Inserir o novo usuário na tabela 'usuarios'
+  const queryCadastroUsuario = `
+      INSERT INTO usuarios (nome, email, senha) 
+      VALUES (?, ?, ?)
+  `;
+  
+  database.query(queryCadastroUsuario, [nome, email, senha], (err, result) => {
+      if (err) {
+          return res.status(500).json({ error: 'Erro ao cadastrar usuário' });
+      }
+      
+      // Pegar o ID do usuário recém-cadastrado
+      const novoUsuarioId = result.insertId;
+      
+      // Inserir os tipos de despesas padrão para o novo usuário
+      const queryTiposDespesas = `
+          INSERT INTO tipos_despesas (titulo, usuarios_id) 
+          VALUES ('Alimentação', ?), 
+                 ('Educação', ?), 
+                 ('Lazer', ?), 
+                 ('Saúde', ?), 
+                 ('Transporte', ?)
+      `;
+      
+      database.query(queryTiposDespesas, [novoUsuarioId, novoUsuarioId, novoUsuarioId, novoUsuarioId, novoUsuarioId], (err) => {
+          if (err) {
+              return res.status(500).json({ error: 'Erro ao adicionar tipos de despesas padrão' });
+          }
+          
+          // Sucesso, usuário e tipos de despesas padrão cadastrados
+          res.status(201).json({ message: 'Usuário cadastrado com sucesso!' });
+      });
   });
 });
+
 
 // Rota para verificar o login do usuário
 app.post('/verificarLogin', (req, res) => {
@@ -128,7 +153,7 @@ app.post('/adicionarTipo', (req, res) => {
   const { titulo } = req.body;
   const usuarios_id = req.session.userId;  // ID do usuário logado armazenado na sessão
 
-  const query = 'INSERT INTO tipos (titulo, usuarios_id) VALUES (?, ?)';
+  const query = 'INSERT INTO tipos_despesas (titulo, usuarios_id) VALUES (?, ?)';
   database.query(query, [titulo, usuarios_id], (err, result) => {
       if (err) {
           console.error(err);
@@ -140,7 +165,7 @@ app.post('/adicionarTipo', (req, res) => {
 
 app.get('/tipos', (req, res) => {
   const usuarios_id = req.session.userId;  // ID do usuário logado
-  const query = 'SELECT * FROM tipos WHERE usuarios_id IS NULL OR usuarios_id = ?';
+  const query = 'SELECT * FROM tipos_despesas WHERE usuarios_id IS NULL OR usuarios_id = ?';
 
   database.query(query, [usuarios_id], (err, results) => {
       if (err) {
