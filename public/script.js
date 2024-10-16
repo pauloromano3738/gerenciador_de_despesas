@@ -211,8 +211,8 @@ function carregarRelatorio() {
                   datasets: [{
                       label: 'Total de Despesas por Tipo (R$)',
                       data: valores,
-                      backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                      borderColor: 'rgba(75, 192, 192, 1)',
+                      backgroundColor: '#0D6EFD', // Cor das barras
+                      borderColor: '#0D6EFD',
                       borderWidth: 1
                   }]
               },
@@ -222,7 +222,23 @@ function carregarRelatorio() {
                           beginAtZero: true,
                           title: {
                               display: true,
-                              text: 'Total (R$)'
+                              text: 'Total (R$)',
+                              color: '#ffffff' // Cor do texto do eixo Y
+                          },
+                          ticks: {
+                              color: '#ffffff' // Cor dos números no eixo Y
+                          }
+                      },
+                      x: {
+                          ticks: {
+                              color: '#ffffff' // Cor dos rótulos no eixo X
+                          }
+                      }
+                  },
+                  plugins: {
+                      legend: {
+                          labels: {
+                              color: '#ffffff' // Cor da legenda
                           }
                       }
                   }
@@ -231,4 +247,5 @@ function carregarRelatorio() {
       })
       .catch(error => console.error('Erro ao carregar os dados:', error));
 }
+
 

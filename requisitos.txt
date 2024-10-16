@@ -2,6 +2,6 @@
 
 (concluído) O dia está sendo adicionado manualmente, quero uma box de opções para os dias de acordo com o mesmo escolhido, uma opção para dia atual que pega o dia atual.
 
-Eu quero uma nova página de relatórios com a filtragem de datas das despesas personalizada, (citadas pelo usuário) ou por mês, ou por ano.
+(concluído) Eu quero uma nova página de relatórios com a filtragem de datas das despesas personalizada, (citadas pelo usuário) ou por mês, ou por ano.
 
 (concluído) No tipo das despesas quero que o usuário possa cadastrar novos tipos.

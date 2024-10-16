@@ -10,7 +10,7 @@ const port = 3000;
 const database = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: 'he182555@', // Use sua senha correta aqui
+  password: 'Paulo202930!', // Use sua senha correta aqui
   database: 'gerenciador_de_despesas'
 });
 
@@ -281,6 +281,7 @@ app.get('/despesas/somaPorTipo', (req, res) => {
       res.json(results);
   });
 });
+
 // Iniciando o servidor na porta 3000
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
