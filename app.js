@@ -258,6 +258,29 @@ app.delete('/despesas/:id', (req, res) => {
   });
 });
 
+app.get('/despesas/somaPorTipo', (req, res) => {
+  const usuarios_id = req.session.userId;
+
+  if (!usuarios_id) {
+      return res.status(401).send('Usuário não autenticado');
+  }
+
+  // SQL para somar as despesas por tipo
+  const query = `
+      SELECT tipos_despesas.titulo AS tipo, SUM(despesas.valor) AS total
+      FROM despesas
+      JOIN tipos_despesas ON despesas.tipo = tipos_despesas.id
+      WHERE despesas.usuarios_id = ?
+      GROUP BY tipos_despesas.titulo
+  `;
+
+  database.query(query, [usuarios_id], (err, results) => {
+      if (err) {
+          return res.status(500).send('Erro ao buscar dados do relatório');
+      }
+      res.json(results);
+  });
+});
 // Iniciando o servidor na porta 3000
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);

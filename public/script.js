@@ -189,3 +189,46 @@ function removerDespesa(id) {
       console.error('Erro ao remover despesa:', err);
   });
 }
+
+function carregarRelatorio() {
+  fetch('/despesas/somaPorTipo') // Rota que retorna a soma das despesas por tipo
+      .then(response => {
+          if (!response.ok) {
+              throw new Error('Erro ao carregar os dados do relatório');
+          }
+          return response.json();
+      })
+      .then(dados => {
+          const tipos = dados.map(item => item.tipo); // Extrai os tipos
+          const valores = dados.map(item => item.total); // Extrai os totais
+          
+          // Cria o gráfico
+          const ctx = document.getElementById('graficoDespesas').getContext('2d');
+          const graficoDespesas = new Chart(ctx, {
+              type: 'bar', // Tipo do gráfico
+              data: {
+                  labels: tipos,
+                  datasets: [{
+                      label: 'Total de Despesas por Tipo (R$)',
+                      data: valores,
+                      backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                      borderColor: 'rgba(75, 192, 192, 1)',
+                      borderWidth: 1
+                  }]
+              },
+              options: {
+                  scales: {
+                      y: {
+                          beginAtZero: true,
+                          title: {
+                              display: true,
+                              text: 'Total (R$)'
+                          }
+                      }
+                  }
+              }
+          });
+      })
+      .catch(error => console.error('Erro ao carregar os dados:', error));
+}
+
