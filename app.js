@@ -149,6 +149,16 @@ app.get('/usuario', (req, res) => {
   }
 });
 
+// Rota para fazer logout do usuário
+app.get('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Erro ao sair' });
+    }
+    res.redirect('/login');
+  });
+});
+
 app.post('/adicionarTipo', (req, res) => {
   const { titulo } = req.body;
   const usuarios_id = req.session.userId;  // ID do usuário logado armazenado na sessão
@@ -189,13 +199,46 @@ app.post('/cadastrarDespesa', verificaAutenticacao, (req, res) => {
   });
 });
 
-// Rota para fazer logout do usuário
-app.get('/logout', (req, res) => {
-  req.session.destroy((err) => {
+app.get('/despesas', (req, res) => {
+  const usuarios_id = req.session.userId; // Pega o ID do usuário logado da sessão
+
+  if (!usuarios_id) {
+    return res.status(401).send('Usuário não autenticado');
+  }
+
+  // SQL com JOIN para pegar os dados da tabela despesas e os títulos da tabela tipos_despesas
+  const query = `
+    SELECT despesas.*, tipos_despesas.titulo AS tipo
+    FROM despesas
+    JOIN tipos_despesas ON despesas.tipo = tipos_despesas.id
+    WHERE despesas.usuarios_id = ?
+    ORDER BY despesas.data DESC
+  `;
+
+  database.query(query, [usuarios_id], (err, results) => {
     if (err) {
-      return res.status(500).json({ error: 'Erro ao sair' });
+      return res.status(500).send('Erro ao buscar despesas');
     }
-    res.redirect('/login');
+    res.json(results); // Retorna as despesas para o front-end
+  });
+});
+
+app.delete('/despesas/:id', (req, res) => {
+  const { id } = req.params; // Pega o ID da despesa a ser removida
+  const usuarios_id = req.session.userId; // Pega o ID do usuário logado da sessão
+
+  if (!usuarios_id) {
+    return res.status(401).send('Usuário não autenticado');
+  }
+
+  // SQL para remover a despesa
+  const query = 'DELETE FROM despesas WHERE id = ? AND usuarios_id = ?';
+  
+  database.query(query, [id, usuarios_id], (err, results) => {
+    if (err) {
+      return res.status(500).send('Erro ao remover despesa');
+    }
+    res.status(204).send(); // Retorna status 204 No Content
   });
 });
 
