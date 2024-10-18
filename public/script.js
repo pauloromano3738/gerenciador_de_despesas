@@ -248,4 +248,28 @@ function carregarRelatorio() {
       .catch(error => console.error('Erro ao carregar os dados:', error));
 }
 
+function imprimirTabela() {
+    var tabelaOriginal = document.getElementById('tabelaDespesas'); // Seleciona a tabela original
+    var tabelaClone = tabelaOriginal.cloneNode(true); // Clona a tabela
 
+    // Remove os botões "Excluir" da tabela clonada
+    var botoesRemover = tabelaClone.getElementsByClassName('btn-danger');
+    while (botoesRemover.length > 0) {
+        botoesRemover[0].parentNode.removeChild(botoesRemover[0]);
+    }
+
+    var janelaImpressao = window.open('', '', 'height=500,width=800');
+    janelaImpressao.document.write('<html><head><title>Imprimir Tabela</title>');
+    janelaImpressao.document.write('<link rel="stylesheet" href="path/to/seu-estilo.css">'); // Substitua pelo caminho do seu CSS
+    janelaImpressao.document.write('</head><body>');
+    janelaImpressao.document.write(tabelaClone.outerHTML); // Usa a tabela clonada sem os botões
+    janelaImpressao.document.write('</body></html>');
+
+    janelaImpressao.document.close();
+
+    janelaImpressao.onload = function () {
+        janelaImpressao.focus();
+        janelaImpressao.print();
+        janelaImpressao.close();
+    };
+}

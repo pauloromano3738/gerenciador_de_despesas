@@ -10,7 +10,7 @@ const port = 3000;
 const database = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: 'Paulo202930!', // Use sua senha correta aqui
+  password: 'he182555@', // Use sua senha correta aqui
   database: 'gerenciador_de_despesas'
 });
 
